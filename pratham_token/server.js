@@ -62,21 +62,36 @@ function jsObjToLuaTable(obj) {
 }
 
 const aosCmd = getAosExecutable();
-const aosArgs = ["--process", processId];
+const aosArgs = []; // Just start with "aos" command
 
-console.log(`Starting persistent aos process: ${aosCmd} ${aosArgs.join(" ")}`);
+// Check if AOS is available
+const { execSync } = require("child_process");
+try {
+  execSync("aos --version", { stdio: 'pipe' });
+  console.log("AOS CLI is available and working");
+} catch (error) {
+  console.log("AOS CLI not found, will try to start anyway");
+}
+
+console.log(`Starting aos process: ${aosCmd}`);
+console.log(`Current PATH: ${process.env.PATH}`);
+console.log(`Current working directory: ${process.cwd()}`);
+
 let aos = null;
 let blueprintLoaded = false;
 
 try {
-  aos = spawn(aosCmd, aosArgs, { shell: true });
+  aos = spawn(aosCmd, aosArgs, { 
+    shell: true,
+    env: { ...process.env, PATH: process.env.PATH }
+  });
 
   aos.stdout.on("data", (data) => {
     const output = data.toString();
     console.log("AOS OUT:", output);
     
-    // Check if AOS is ready (look for prompt or specific output)
-    if (!blueprintLoaded && (output.includes("aos>") || output.includes("Ready") || output.includes("Connected"))) {
+    // Check if AOS is ready (look for prompt)
+    if (!blueprintLoaded && output.includes("aos>")) {
       console.log("AOS is ready, sending .load-blueprint token command...");
       aos.stdin.write(".load-blueprint token\n");
       blueprintLoaded = true;
@@ -103,7 +118,7 @@ try {
       aos.stdin.write(".load-blueprint token\n");
       blueprintLoaded = true;
     }
-  }, 3000); // Wait 3 seconds for AOS to fully start
+  }, 2000); // Wait 2 seconds for AOS to fully start
 } catch (error) {
   console.error("Failed to spawn aos process:", error);
   console.log("AOS CLI not available, using fallback mode");

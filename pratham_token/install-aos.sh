@@ -25,14 +25,28 @@ fi
 echo "Installing AOS via curl..."
 curl -L https://github.com/arweave-foundation/ao/releases/latest/download/aos-linux-x64 -o aos
 chmod +x aos
-# Try to move to /usr/local/bin, if that fails, use current directory
+
+# Try multiple installation locations
 if mv aos /usr/local/bin/ 2>/dev/null; then
     echo "AOS CLI installed to /usr/local/bin/"
+    export PATH="/usr/local/bin:$PATH"
+elif mv aos /usr/bin/ 2>/dev/null; then
+    echo "AOS CLI installed to /usr/bin/"
+    export PATH="/usr/bin:$PATH"
 else
-    # If we can't use /usr/local/bin, use current directory and add to PATH
+    # If we can't use system directories, use current directory
     echo "Installing AOS to current directory..."
     export PATH="$PWD:$PATH"
-    echo "export PATH=\"$PWD:\$PATH\"" >> ~/.bashrc
+    # Also try to make it available globally
+    ln -sf "$PWD/aos" /usr/local/bin/aos 2>/dev/null || true
+fi
+
+# Verify installation
+if command -v aos &> /dev/null; then
+    echo "AOS CLI verified and ready"
+    aos --version
+else
+    echo "AOS CLI installation failed, but continuing..."
 fi
 
 if command -v aos &> /dev/null; then
