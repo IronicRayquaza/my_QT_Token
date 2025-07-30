@@ -277,6 +277,14 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
         console.log("WebSocket closed after streaming mint output");
       }
     );
+    
+    // Send to token message system (like transfer does)
+    sendTokenMessage([
+      { name: "Action", value: "Mint" },
+      { name: "Quantity", value: mintQty },
+    ]);
+    
+    setMintQty("");
   };
 
   // const handleMint = async (e: FormEvent) => {
@@ -360,6 +368,13 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
         console.log("WebSocket closed after streaming burn output");
       }
     );
+    
+    // Send to token message system (like transfer does)
+    sendTokenMessage([
+      { name: "Action", value: "Burn" },
+      { name: "Quantity", value: burnQty },
+    ]);
+    
     // Reset input
     setBurnQty("");
   };
