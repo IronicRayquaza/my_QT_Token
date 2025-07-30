@@ -42,7 +42,7 @@ const DeployToken: React.FC = () => {
       );
 
       // Dispatch using arweaveWallet
-      const result = await window.arweaveWallet.dispatch(tx);
+      await window.arweaveWallet.dispatch(tx);
 
       // Register contract on Warp gateway node
       await warp.register(tx.id, "node2");

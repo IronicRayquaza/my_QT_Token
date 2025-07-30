@@ -21,19 +21,19 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const TOKEN_ACTIONS = [
-  { label: "Info", action: "Info", tags: [{ name: "Action", value: "Info" }] },
-  {
-    label: "Balances",
-    action: "Balances",
-    tags: [{ name: "Action", value: "Balances" }],
-  },
-  {
-    label: "Total Supply",
-    action: "Total-Supply",
-    tags: [{ name: "Action", value: "Total-Supply" }],
-  },
-];
+// const TOKEN_ACTIONS = [
+//   { label: "Info", action: "Info", tags: [{ name: "Action", value: "Info" }] },
+//   {
+//     label: "Balances",
+//     action: "Balances",
+//     tags: [{ name: "Action", value: "Balances" }],
+//   },
+//   {
+//     label: "Total Supply",
+//     action: "Total-Supply",
+//     tags: [{ name: "Action", value: "Total-Supply" }],
+//   },
+// ];
 
 // Add this to fix TS errors for window.arweaveWallet
 declare global {
@@ -195,7 +195,7 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
         if (message.type === "aos-output") {
           const lines = message.data.split("\n");
 
-          lines.forEach((line) => {
+          lines.forEach((line: string) => {
             const cleaned = stripAnsi(line.trim());
             if (!cleaned) return;
 
@@ -379,7 +379,22 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
     const transferCommand = `aos transfer --process ${processId} --to ${transfer.recipient} --qty ${transfer.quantity}`;
     await navigator.clipboard.writeText(transferCommand);
     // sendAosLuaCommandToWebSocket(luaTransfer);
-    sendAosLuaCommandToWebSocket(luaTransfer);
+    sendAosLuaCommandToWebSocket(
+      luaTransfer,
+      (line) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: line,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      },
+      () => {
+        console.log("WebSocket closed after streaming transfer output");
+      }
+    );
     sendTokenMessage([
       { name: "Action", value: "Transfer" },
       { name: "Recipient", value: transfer.recipient },
@@ -532,7 +547,7 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
                 </pre>
               );
             }
-            return String(msg.content);
+            return <span>{msg.content}</span>;
           }
 
           return (

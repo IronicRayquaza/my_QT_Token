@@ -1,10 +1,8 @@
-import React, { useRef } from "react";
+import React from "react";
 import TokenBlueprintChat from "./TokenBlueprintChat";
 // import TerminalComponent from "./Terminal";
 
 function App() {
-  
-
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       {/* <TerminalComponent onCommand={handleTerminalCommand} /> */}
