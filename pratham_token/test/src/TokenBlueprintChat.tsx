@@ -38,7 +38,7 @@ interface ChatMessage {
 // Add this to fix TS errors for window.arweaveWallet
 declare global {
   interface Window {
-    arweaveWallet?: any;
+    arweaveWallet: any;
   }
 }
 
@@ -66,7 +66,7 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
   }));
 
   useEffect(() => {
-    if (!window.arweaveWallet) {
+    if (typeof window !== 'undefined' && !window.arweaveWallet) {
       setError("ArConnect wallet not detected. Please install ArConnect.");
     }
   }, []);
@@ -90,8 +90,12 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
       };
 
       if (requireSigner) {
-        const signer = createDataItemSigner(window.arweaveWallet);
-        messageOptions.signer = signer;
+        if (window.arweaveWallet) {
+          const signer = createDataItemSigner(window.arweaveWallet);
+          messageOptions.signer = signer;
+        } else {
+          throw new Error("ArConnect wallet not available");
+        }
       }
 
       const sentMessage = await message(messageOptions);
@@ -411,21 +415,21 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           <button
             className="tbc-btn"
             onClick={handleInfo}
-            disabled={loading || !window.arweaveWallet}
+            disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
           >
             Info
           </button>
           <button
             className="tbc-btn"
             onClick={handleBalances}
-            disabled={loading || !window.arweaveWallet}
+            disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
           >
             Balances
           </button>
           <button
             className="tbc-btn"
             onClick={handleTotalSupply}
-            disabled={loading || !window.arweaveWallet}
+            disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
           >
             Total Supply
           </button>
@@ -571,12 +575,12 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           onChange={(e) => setBalanceTarget(e.target.value)}
           placeholder="Check balance of (address, blank for self)"
           className="tbc-input"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         />
         <button
           type="submit"
           className="tbc-btn"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         >
           Balance
         </button>
@@ -591,7 +595,7 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           }
           placeholder="Recipient address"
           className="tbc-input"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         />
         <input
           type="text"
@@ -601,12 +605,12 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           }
           placeholder="Quantity"
           className="tbc-input"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         />
         <button
           type="submit"
           className="tbc-btn"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         >
           Transfer
         </button>
@@ -619,12 +623,12 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           onChange={(e) => setMintQty(e.target.value)}
           placeholder="Mint quantity (owner only)"
           className="tbc-input"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         />
         <button
           type="submit"
           className="tbc-btn"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         >
           Mint
         </button>
@@ -637,12 +641,12 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
           onChange={(e) => setBurnQty(e.target.value)}
           placeholder="Burn quantity"
           className="tbc-input"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         />
         <button
           type="submit"
           className="tbc-btn"
-          disabled={loading || !window.arweaveWallet}
+          disabled={loading || !(typeof window !== 'undefined' && window.arweaveWallet)}
         >
           Burn
         </button>
