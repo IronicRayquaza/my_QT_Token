@@ -66,12 +66,21 @@ const aosArgs = ["--process", processId];
 
 console.log(`Starting persistent aos process: ${aosCmd} ${aosArgs.join(" ")}`);
 let aos = null;
+let blueprintLoaded = false;
 
 try {
   aos = spawn(aosCmd, aosArgs, { shell: true });
 
   aos.stdout.on("data", (data) => {
-    console.log("AOS OUT:", data.toString());
+    const output = data.toString();
+    console.log("AOS OUT:", output);
+    
+    // Check if AOS is ready (look for prompt or specific output)
+    if (!blueprintLoaded && (output.includes("aos>") || output.includes("Ready") || output.includes("Connected"))) {
+      console.log("AOS is ready, sending .load-blueprint token command...");
+      aos.stdin.write(".load-blueprint token\n");
+      blueprintLoaded = true;
+    }
   });
 
   aos.stderr.on("data", (data) => {
@@ -86,6 +95,15 @@ try {
   aos.on("close", (code) => {
     console.error("AOS process exited with code", code);
   });
+
+  // Send .load-blueprint token command after AOS starts (fallback)
+  setTimeout(() => {
+    if (aos && aos.stdin && !blueprintLoaded) {
+      console.log("Sending .load-blueprint token command to AOS (fallback)...");
+      aos.stdin.write(".load-blueprint token\n");
+      blueprintLoaded = true;
+    }
+  }, 3000); // Wait 3 seconds for AOS to fully start
 } catch (error) {
   console.error("Failed to spawn aos process:", error);
   console.log("AOS CLI not available, using fallback mode");
