@@ -278,12 +278,6 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
       }
     );
     
-    // Send to token message system (like transfer does)
-    sendTokenMessage([
-      { name: "Action", value: "Mint" },
-      { name: "Quantity", value: mintQty },
-    ]);
-    
     setMintQty("");
   };
 
@@ -369,12 +363,6 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
       }
     );
     
-    // Send to token message system (like transfer does)
-    sendTokenMessage([
-      { name: "Action", value: "Burn" },
-      { name: "Quantity", value: burnQty },
-    ]);
-    
     // Reset input
     setBurnQty("");
   };
@@ -414,11 +402,6 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
         console.log("WebSocket closed after streaming transfer output");
       }
     );
-    sendTokenMessage([
-      { name: "Action", value: "Transfer" },
-      { name: "Recipient", value: transfer.recipient },
-      { name: "Quantity", value: transfer.quantity },
-    ]);
     setTransfer({ recipient: "", quantity: "" });
   };
 
