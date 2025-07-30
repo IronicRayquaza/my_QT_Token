@@ -3,6 +3,13 @@ import Arweave from "arweave";
 import { WarpFactory } from "warp-contracts";
 import { DeployPlugin } from "warp-contracts-plugin-deploy";
 
+// Add this to fix TS errors for window.arweaveWallet
+declare global {
+  interface Window {
+    arweaveWallet?: any;
+  }
+}
+
 // Arweave instance
 const arweave = Arweave.init({
   host: "arweave.net",

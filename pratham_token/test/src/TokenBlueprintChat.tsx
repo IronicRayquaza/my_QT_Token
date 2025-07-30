@@ -450,7 +450,7 @@ const TokenBlueprintChat = forwardRef(function TokenBlueprintChat(
                 {Object.entries(balancesObj || {}).map(([addr, bal]) => (
                   <li key={addr} className="tbc-balance-item">
                     <span className="tbc-balance-addr">{addr}</span>:{" "}
-                    <span className="tbc-balance-val">{bal}</span>
+                    <span className="tbc-balance-val">{String(bal)}</span>
                   </li>
                 ))}
               </ul>
