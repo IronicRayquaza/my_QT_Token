@@ -38,12 +38,11 @@ function getAosExecutable() {
   // For Linux (Render), try multiple locations
   const candidates = [
     "aos",
-    "npx aos",
     "./aos",
     "/usr/local/bin/aos",
     path.join(__dirname, "aos")
   ];
-  return candidates.find((cmd) => true) || "npx aos"; // Default to npx aos
+  return aosAvailable ? aosCommand : "aos"; // Use the detected command
 }
 
 function jsObjToLuaTable(obj) {
@@ -67,17 +66,15 @@ const aosArgs = []; // Just start with "aos" command
 
 // Check if AOS is available
 const { execSync } = require("child_process");
+let aosAvailable = false;
+let aosCommand = "aos";
+
 try {
   execSync("aos --version", { stdio: 'pipe' });
   console.log("AOS CLI is available and working");
+  aosAvailable = true;
 } catch (error) {
-  console.log("AOS CLI not found, trying npx...");
-  try {
-    execSync("npx aos --version", { stdio: 'pipe' });
-    console.log("AOS CLI is available via npx");
-  } catch (npxError) {
-    console.log("AOS CLI not found via npx either, will try to start anyway");
-  }
+  console.log("AOS CLI not found, will use fallback mode");
 }
 
 console.log(`Starting aos process: ${aosCmd}`);
@@ -86,6 +83,7 @@ console.log(`Current working directory: ${process.cwd()}`);
 
 let aos = null;
 let blueprintLoaded = false;
+let processId = null;
 
 try {
   aos = spawn(aosCmd, aosArgs, { 
@@ -96,6 +94,15 @@ try {
   aos.stdout.on("data", (data) => {
     const output = data.toString();
     console.log("AOS OUT:", output);
+    
+    // Extract process ID when AOS starts
+    if (!processId && output.includes("Process ID:")) {
+      const match = output.match(/Process ID:\s*([a-zA-Z0-9]+)/);
+      if (match) {
+        processId = match[1];
+        console.log("Extracted Process ID:", processId);
+      }
+    }
     
     // Check if AOS is ready (look for prompt)
     if (!blueprintLoaded && output.includes("aos>")) {
@@ -182,12 +189,13 @@ wss.on("connection", (ws) => {
       }
       
       if (typeof aosMessage === "string") {
+        // Send the message directly to AOS CLI
         aos.stdin.write(aosMessage + "\n");
         console.log("Sent to aos:", aosMessage);
       } else if (typeof aosMessage === "object") {
-        // Fallback: convert object to Lua table and wrap in Send
+        // Convert object to Lua table and wrap in Send
         if (!("Target" in aosMessage)) {
-          aosMessage.Target = "ao.id";
+          aosMessage.Target = processId || "ao.id";
         }
         const luaTable = jsObjToLuaTable(aosMessage);
         const luaSend = `Send(${luaTable})\n`;

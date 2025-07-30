@@ -1,65 +1,33 @@
 #!/bin/bash
 
-# Install AOS CLI on Render
 echo "Installing AOS CLI..."
 
-# Check if aos is already installed
-if command -v aos &> /dev/null; then
-    echo "AOS CLI is already installed"
-    aos --version
-    exit 0
-fi
-
-# Try to install via npm if available
+# Install AOS CLI using the official method
 if command -v npm &> /dev/null; then
-    echo "Installing AOS via npm..."
-    npm install -g aos
+    echo "Installing AOS CLI via npm..."
+    npm i -g https://get_ao.g8way.io
+    
     if command -v aos &> /dev/null; then
-        echo "AOS CLI installed successfully via npm"
+        echo "AOS CLI installed successfully"
         aos --version
         exit 0
+    else
+        echo "AOS CLI installation completed but not found in PATH"
+        echo "Trying to find aos in npm global packages..."
+        
+        # Try to find aos in npm global packages
+        NPM_GLOBAL=$(npm config get prefix)
+        if [ -f "$NPM_GLOBAL/bin/aos" ]; then
+            echo "Found AOS CLI at $NPM_GLOBAL/bin/aos"
+            export PATH="$NPM_GLOBAL/bin:$PATH"
+        elif [ -f "$NPM_GLOBAL/lib/node_modules/aos/bin/aos" ]; then
+            echo "Found AOS CLI in node_modules"
+            ln -sf "$NPM_GLOBAL/lib/node_modules/aos/bin/aos" /usr/local/bin/aos 2>/dev/null || true
+        fi
     fi
-fi
-
-# Try to install via npm with sudo if needed
-if command -v npm &> /dev/null; then
-    echo "Trying npm install with sudo..."
-    sudo npm install -g aos 2>/dev/null || npm install -g aos
-    if command -v aos &> /dev/null; then
-        echo "AOS CLI installed successfully via npm"
-        aos --version
-        exit 0
-    fi
-fi
-
-# Try to install via curl (alternative method)
-echo "Installing AOS via curl..."
-curl -L https://github.com/arweave-foundation/ao/releases/latest/download/aos-linux-x64 -o aos
-chmod +x aos
-
-# Check if the file is valid
-if file aos | grep -q "ELF"; then
-    echo "AOS binary is valid ELF file"
 else
-    echo "AOS binary is not valid, trying alternative download..."
-    rm -f aos
-    curl -L https://github.com/arweave-foundation/ao/releases/latest/download/aos-linux-amd64 -o aos
-    chmod +x aos
-fi
-
-# Try multiple installation locations
-if mv aos /usr/local/bin/ 2>/dev/null; then
-    echo "AOS CLI installed to /usr/local/bin/"
-    export PATH="/usr/local/bin:$PATH"
-elif mv aos /usr/bin/ 2>/dev/null; then
-    echo "AOS CLI installed to /usr/bin/"
-    export PATH="/usr/bin:$PATH"
-else
-    # If we can't use system directories, use current directory
-    echo "Installing AOS to current directory..."
-    export PATH="$PWD:$PATH"
-    # Also try to make it available globally
-    ln -sf "$PWD/aos" /usr/local/bin/aos 2>/dev/null || true
+    echo "npm not found, cannot install AOS CLI"
+    exit 1
 fi
 
 # Verify installation
@@ -68,13 +36,4 @@ if command -v aos &> /dev/null; then
     aos --version
 else
     echo "AOS CLI installation failed, but continuing..."
-fi
-
-if command -v aos &> /dev/null; then
-    echo "AOS CLI installed successfully via curl"
-    aos --version
-    exit 0
-fi
-
-echo "Failed to install AOS CLI"
-exit 1 
+fi 
