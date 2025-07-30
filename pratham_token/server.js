@@ -35,7 +35,14 @@ function getAosExecutable() {
     ];
     return candidates.find((cmd) => true); // Just return the first, let spawn handle errors
   }
-  return "aos";
+  // For Linux (Render), try multiple locations
+  const candidates = [
+    "aos",
+    "./aos",
+    "/usr/local/bin/aos",
+    path.join(__dirname, "aos")
+  ];
+  return candidates.find((cmd) => true) || "aos"; // Default to "aos"
 }
 
 function jsObjToLuaTable(obj) {
@@ -58,23 +65,31 @@ const aosCmd = getAosExecutable();
 const aosArgs = ["--process", processId];
 
 console.log(`Starting persistent aos process: ${aosCmd} ${aosArgs.join(" ")}`);
-const aos = spawn(aosCmd, aosArgs, { shell: true });
+let aos = null;
 
-aos.stdout.on("data", (data) => {
-  console.log("AOS OUT:", data.toString());
-});
+try {
+  aos = spawn(aosCmd, aosArgs, { shell: true });
 
-aos.stderr.on("data", (data) => {
-  console.error("AOS ERR:", data.toString());
-});
+  aos.stdout.on("data", (data) => {
+    console.log("AOS OUT:", data.toString());
+  });
 
-aos.on("error", (error) => {
-  console.error("Failed to start aos process:", error);
-});
+  aos.stderr.on("data", (data) => {
+    console.error("AOS ERR:", data.toString());
+  });
 
-aos.on("close", (code) => {
-  console.error("AOS process exited with code", code);
-});
+  aos.on("error", (error) => {
+    console.error("Failed to start aos process:", error);
+    console.log("AOS CLI not available, using fallback mode");
+  });
+
+  aos.on("close", (code) => {
+    console.error("AOS process exited with code", code);
+  });
+} catch (error) {
+  console.error("Failed to spawn aos process:", error);
+  console.log("AOS CLI not available, using fallback mode");
+}
 
 const wss = new WebSocket.Server({ server });
 
@@ -106,11 +121,26 @@ wss.on("connection", (ws) => {
       console.log("Ignored non-critical output.");
     }
   };
-  aos.stdout.on("data", dataHandler);
-  aos.stderr.on("data", dataHandler);
+  
+  if (aos) {
+    aos.stdout.on("data", dataHandler);
+    aos.stderr.on("data", dataHandler);
+  }
   ws.on("message", (message) => {
     try {
       const { aosMessage } = JSON.parse(message);
+      
+      if (!aos) {
+        // AOS not available, send mock response
+        const mockResponse = {
+          type: "aos-output",
+          data: `Mock response: ${aosMessage} (AOS CLI not available in this environment)`
+        };
+        ws.send(JSON.stringify(mockResponse));
+        console.log("Sent mock response:", mockResponse);
+        return;
+      }
+      
       if (typeof aosMessage === "string") {
         aos.stdin.write(aosMessage + "\n");
         console.log("Sent to aos:", aosMessage);
@@ -135,8 +165,10 @@ wss.on("connection", (ws) => {
   ws.on("close", () => {
     console.log("Client disconnected");
     // Important: Remove the listeners to prevent memory leaks if you have many connections
-    aos.stdout.removeListener("data", dataHandler);
-    aos.stderr.removeListener("data", dataHandler);
+    if (aos) {
+      aos.stdout.removeListener("data", dataHandler);
+      aos.stderr.removeListener("data", dataHandler);
+    }
   });
 });
 

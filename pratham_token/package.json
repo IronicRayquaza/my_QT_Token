@@ -7,8 +7,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "chmod +x install-aos.sh && ./install-aos.sh && cd test && npm install && npm run build",
+    "build": "cd test && npm install && npm run build",
     "start": "node server.js",
+    "start:fallback": "node server-fallback.js",
     "dev": "node server.js"
   },
   "keywords": [],
