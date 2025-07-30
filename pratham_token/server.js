@@ -38,11 +38,12 @@ function getAosExecutable() {
   // For Linux (Render), try multiple locations
   const candidates = [
     "aos",
+    "npx aos",
     "./aos",
     "/usr/local/bin/aos",
     path.join(__dirname, "aos")
   ];
-  return candidates.find((cmd) => true) || "aos"; // Default to "aos"
+  return candidates.find((cmd) => true) || "npx aos"; // Default to npx aos
 }
 
 function jsObjToLuaTable(obj) {
@@ -70,7 +71,13 @@ try {
   execSync("aos --version", { stdio: 'pipe' });
   console.log("AOS CLI is available and working");
 } catch (error) {
-  console.log("AOS CLI not found, will try to start anyway");
+  console.log("AOS CLI not found, trying npx...");
+  try {
+    execSync("npx aos --version", { stdio: 'pipe' });
+    console.log("AOS CLI is available via npx");
+  } catch (npxError) {
+    console.log("AOS CLI not found via npx either, will try to start anyway");
+  }
 }
 
 console.log(`Starting aos process: ${aosCmd}`);

@@ -3,7 +3,7 @@ services:
     name: pratham-token
     env: node
     buildCommand: npm install && npm run build
-    startCommand: chmod +x install-aos.sh && ./install-aos.sh && npm start
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production 

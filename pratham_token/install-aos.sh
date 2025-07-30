@@ -21,10 +21,31 @@ if command -v npm &> /dev/null; then
     fi
 fi
 
+# Try to install via npm with sudo if needed
+if command -v npm &> /dev/null; then
+    echo "Trying npm install with sudo..."
+    sudo npm install -g aos 2>/dev/null || npm install -g aos
+    if command -v aos &> /dev/null; then
+        echo "AOS CLI installed successfully via npm"
+        aos --version
+        exit 0
+    fi
+fi
+
 # Try to install via curl (alternative method)
 echo "Installing AOS via curl..."
 curl -L https://github.com/arweave-foundation/ao/releases/latest/download/aos-linux-x64 -o aos
 chmod +x aos
+
+# Check if the file is valid
+if file aos | grep -q "ELF"; then
+    echo "AOS binary is valid ELF file"
+else
+    echo "AOS binary is not valid, trying alternative download..."
+    rm -f aos
+    curl -L https://github.com/arweave-foundation/ao/releases/latest/download/aos-linux-amd64 -o aos
+    chmod +x aos
+fi
 
 # Try multiple installation locations
 if mv aos /usr/local/bin/ 2>/dev/null; then
