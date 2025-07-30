@@ -1,0 +1,22 @@
+{
+  "name": "token-on-ao",
+  "version": "1.0.0",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "chmod +x install-aos.sh && ./install-aos.sh && cd test && npm install && npm run build",
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "ws": "^8.18.3",
+    "express": "^4.18.2"
+  }
+}
